@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/tetris_in_d
+tetris_in_d.so
+tetris_in_d.dylib
+tetris_in_d.dll
+tetris_in_d.a
+tetris_in_d.lib
+tetris_in_d-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
