@@ -69,11 +69,11 @@ enum TILE_SIZE = 30;
 ///   blockX = int
 ///   blockY = int
 void spawnBlock(
-                    ref int[4][4] currentBlock,
-                    ref int currentBlockIndex,
-                    ref int blockX,
-                    ref int blockY
-                ) {
+                ref int[4][4] currentBlock,
+                ref int currentBlockIndex,
+                ref int blockX,
+                ref int blockY
+            ) {
     currentBlockIndex = uniform(0, 7);
     currentBlock = tetrominoShapes[currentBlockIndex];
     blockX = 3;
@@ -88,11 +88,11 @@ void spawnBlock(
 ///   blockY = int
 /// Returns: bool
 bool checkCollision(
-                        ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                        ref int[4][4] currentBlock, 
-                        ref int blockX,
-                        ref int blockY
-                    ) {
+                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
+                    ref int[4][4] currentBlock, 
+                    ref int blockX,
+                    ref int blockY
+                ) {
     // 回転したブロックで衝突をチェック
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
@@ -109,6 +109,12 @@ bool checkCollision(
     return false;
 }
 
+/// 
+/// Params:
+///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
+///   currentBlock = int[4][4]
+///   blockX = int
+///   blockY = int
 void fixBlock(
                 ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
                 ref int[4][4] currentBlock,
@@ -129,6 +135,10 @@ void fixBlock(
     clearFullLines(board);  // ラインをクリア
 }
 
+/// 
+/// Params:
+///   currentBlock = int[4][4]
+/// Returns: int
 int getLeftmostX(ref int[4][4] currentBlock) {
     int minX = 4;
     foreach (y; 0 .. 4) {
@@ -141,6 +151,10 @@ int getLeftmostX(ref int[4][4] currentBlock) {
     return minX;
 }
 
+/// 
+/// Params:
+///   currentBlock = int[4][4]
+/// Returns: int
 int getRightmostX(ref int[4][4] currentBlock) {
     int maxX = -1;
     foreach (y; 0 .. 4) {
@@ -194,11 +208,11 @@ void adjustBlockPosition(
 ///   currentBlock = int[4][4]
 ///   blockX = int
 ///   blockY = int
-void drawBlock  (
-                    ref int[4][4] currentBlock,
-                    ref int blockX,
-                    ref int blockY
-                ) {
+void drawBlock(
+                ref int[4][4] currentBlock,
+                ref int blockX,
+                ref int blockY
+            ) {
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
             int drawX = blockX + x;
@@ -266,24 +280,6 @@ void tryWallKick(
     blockX -= 1;
 }
 
-
-// bool checkCollision(int[4][4] currentBlock) {
-//     // 回転したブロックで衝突をチェック
-//     foreach (y; 0 .. 4) {
-//         foreach (x; 0 .. 4) {
-//             int drawX = blockX + x;
-//             int drawY = blockY + y;
-//             if (currentBlock[y][x] == 1) {
-//                 // ボードの範囲外か、すでにブロックがある場合は衝突
-//                 if (drawX < 0 || drawX >= BOARD_WIDTH || drawY >= BOARD_HEIGHT || board[drawY][drawX] != 0) {
-//                     return true;
-//                 }
-//             }
-//         }
-//     }
-//     return false;
-// }
-
 /// 
 /// Params:
 ///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
@@ -306,9 +302,12 @@ void hardDrop(
     spawnBlock(currentBlock, currentBlockIndex, blockX, blockY);       // 次のブロック
 }
 
+/// 
+/// Params:
+///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
 void clearFullLines(
                     ref int[BOARD_WIDTH][BOARD_HEIGHT] board
-) {
+                ) {
     // ラインが揃っているかチェックして、揃っている場合は削除
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
         bool isFullLine = true;
@@ -364,9 +363,9 @@ void main() {
         if (MonoTime.currTime - lastDrop > dropInterval) {
             blockY++;
             if (checkCollision(board, currentBlock, blockX, blockY)) {
-                blockY--; // Revert the currentBlock's position
-                fixBlock(board, currentBlock, blockX, blockY); // Fix the currentBlock to the board
-                spawnBlock(currentBlock, currentBlockIndex, blockX, blockY); // Spawn a new currentBlock
+                blockY--; // 衝突したら1マス戻す
+                fixBlock(board, currentBlock, blockX, blockY); // 盤面に固定
+                spawnBlock(currentBlock, currentBlockIndex, blockX, blockY); // 次のブロックの生成
             }
             lastDrop = MonoTime.currTime;
         }
