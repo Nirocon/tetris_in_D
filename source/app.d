@@ -338,6 +338,22 @@ void clearFullLines(
     }
 }
 
+/// 
+/// 盤面の描画をする。
+/// Params:
+///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
+void drawField(
+                ref int[BOARD_WIDTH][BOARD_HEIGHT] board
+            ){
+    foreach (y; 0 .. BOARD_HEIGHT) {
+        foreach (x; 0 .. BOARD_WIDTH) {
+            if (board[y][x] != 0) {
+                DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1, Colors.DARKGRAY);
+            }
+        }
+    }
+}
+
 void main() {
     int[BOARD_WIDTH][BOARD_HEIGHT] board; // Note the order of dimensions: [height][width]
     int[4][4] currentBlock;
@@ -378,13 +394,7 @@ void main() {
         ClearBackground(Colors.RAYWHITE);
 
         // 盤面の描画
-        foreach (y; 0 .. BOARD_HEIGHT) {
-            foreach (x; 0 .. BOARD_WIDTH) {
-                if (board[y][x] != 0) {
-                    DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1, Colors.DARKGRAY);
-                }
-            }
-        }
+        drawField(board);
 
         // ブロックの描画
         drawBlock(currentBlock, blockX, blockY);
