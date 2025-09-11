@@ -374,9 +374,7 @@ void main() {
         if (IsKeyPressed(KeyboardKey.KEY_RIGHT)) 	blockX++;
         if (IsKeyPressed(KeyboardKey.KEY_DOWN))  	hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
 		if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlock(board, currentBlock, blockX, blockY);  // 回転処理
-
-        if (IsKeyPressed(KeyboardKey.KEY_A))      MaximizeWindow(); // フルスクリーン切り替え
-
+        
         adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
         // 自動で下に落ちる処理
