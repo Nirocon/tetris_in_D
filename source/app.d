@@ -58,6 +58,8 @@ enum int[4][4][7] tetrominoShapes = [
     ]
 ];
 
+enum SCREEN_WIDTH = 800;
+enum SCREEN_HEIGHT = 600;
 enum BOARD_WIDTH = 10;
 enum BOARD_HEIGHT = 20;
 enum TILE_SIZE = 30;
@@ -342,7 +344,7 @@ void main() {
     int blockX = 3, blockY = 0;
     int currentBlockIndex;
 
-    InitWindow(BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, "D テトリス");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "D テトリス");
 
     SetTargetFPS(60);
     spawnBlock(currentBlock, currentBlockIndex, blockX, blockY);
@@ -356,6 +358,8 @@ void main() {
         if (IsKeyPressed(KeyboardKey.KEY_RIGHT)) 	blockX++;
         if (IsKeyPressed(KeyboardKey.KEY_DOWN))  	hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
 		if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlock(board, currentBlock, blockX, blockY);  // 回転処理
+
+        if (IsKeyPressed(KeyboardKey.KEY_A))      MaximizeWindow(); // フルスクリーン切り替え
 
         adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
