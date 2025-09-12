@@ -233,12 +233,38 @@ void drawBlock(
 }
 
 /// 
+/// Rotate the block 90 degrees to the left (clockwise).
 /// Params:
 ///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
 ///   currentBlock = int[4][4]
 ///   blockX = int
 ///   blockY = int
-void rotateBlock(
+void rotateBlockLeft(
+                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
+                    ref int[4][4] currentBlock,
+                    ref int blockX,
+                    ref int blockY
+                ) {
+    int[4][4] rotatedBlock;
+    foreach (y; 0 .. 4)
+        foreach (x; 0 .. 4)
+            rotatedBlock[3 - x][y] = currentBlock[y][x];
+
+    if (!checkCollision(board, rotatedBlock, blockX, blockY)) {
+        currentBlock = rotatedBlock;
+    } else {
+		tryWallKick(board, currentBlock, rotatedBlock, blockX, blockY);
+	}
+}
+
+/// 
+/// Rotate the block 90 degrees to the right (clockwise).
+/// Params:
+///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
+///   currentBlock = int[4][4]
+///   blockX = int
+///   blockY = int
+void rotateBlockRight(
                     ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
                     ref int[4][4] currentBlock,
                     ref int blockX,
@@ -406,7 +432,8 @@ void main() {
         if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
         if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))     blockY++;
         
-		if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlock(board, currentBlock, blockX, blockY);  // 回転処理
+		if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
+		if (IsKeyPressed(KeyboardKey.KEY_X)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
 
         if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
 
