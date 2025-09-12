@@ -437,6 +437,7 @@ void drop(
 
 void main() {
     int gameState = 0; // 0: 待機中, 1: プレイ中, 2: ゲームオーバー
+    string statusMessage = "Press Enter to Start";
 
     int[BOARD_WIDTH][BOARD_HEIGHT] board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // Note the order of dimensions: [height][width]
     int[4][4] currentBlock;
@@ -456,6 +457,7 @@ void main() {
             case 0: // 待機中
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
                     gameState = 1; // プレイ中に遷移
+                    statusMessage = null;
                     board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
                     spawnBlock(currentBlock, currentBlockIndex, blockX, blockY);
                     lastDrop = MonoTime.currTime; // 落下タイマーのリセット
@@ -483,6 +485,7 @@ void main() {
             case 2: // ゲームオーバー
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
                     gameState = 0; // 待機中に戻る
+                    statusMessage = "Press Enter to Start";
                 }
                 break;
             default:
@@ -498,6 +501,10 @@ void main() {
 
         // ブロックの描画
         drawBlock(currentBlock, blockX, blockY);
+
+        if (statusMessage) {
+            DrawText(statusMessage.ptr, SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, 20) / 2, SCREEN_HEIGHT / 2 - 10, 20, Colors.DARKGRAY);
+        }
 
         EndDrawing();
     }
