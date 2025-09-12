@@ -4,6 +4,8 @@ import raylib.raylib_types;
 import std.stdio;
 import std.random : uniform;
 import std.datetime : MonoTime, Duration;
+import std.string : format;
+
 import core.time : Duration, msecs;
 
 enum int[4][4][7] tetrominoShapes = [
@@ -532,6 +534,15 @@ void main() {
                 Colors.DARKGRAY
             );
         }
+
+        //スコアの描画
+        DrawText(
+            format("Score: %7d", score).ptr,
+            SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 - 150,
+            SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + 20,
+            20,
+            Colors.DARKGRAY
+        );
 
         EndDrawing();
     }
