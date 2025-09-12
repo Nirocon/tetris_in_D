@@ -402,10 +402,13 @@ void main() {
 
     while (!WindowShouldClose()) {
         // 入力処理
-        if (IsKeyPressed(KeyboardKey.KEY_LEFT))  	blockX--;
-        if (IsKeyPressed(KeyboardKey.KEY_RIGHT)) 	blockX++;
-        if (IsKeyPressed(KeyboardKey.KEY_DOWN))  	hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
+        if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT))  	blockX--;
+        if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
+        if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))     blockY++;
+        
 		if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlock(board, currentBlock, blockX, blockY);  // 回転処理
+
+        if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
 
         adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
