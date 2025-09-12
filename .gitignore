@@ -14,3 +14,4 @@ tetris_in_d-test-*
 *.o
 *.obj
 *.lst
+*.dylib

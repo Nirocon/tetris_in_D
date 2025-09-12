@@ -1,20 +1,25 @@
 {
+	"libs": [
+		"raylib"
+	],
+	"lflags-posix": [
+		"-L."
+	],
+	"lflags-osx": [
+		"-rpath",
+		"@executable_path/"
+	],
+	"lflags-linux": [
+		"-rpath=$$ORIGIN"
+	],
+	"description": "A minimal D application.",
+	"name": "tetris",
+	"dependencies": {
+		"raylib-d": "~>5.5.1"
+	},
 	"authors": [
 		"Kawa tomo"
 	],
 	"copyright": "Copyright © 2025, Kawa tomo",
-	"description": "A minimal D application.",
-	"license": "proprietary",
-	"name": "tetris",
-	"dependencies": {
-		"raylib-d": "~>4.5.0"
-	},
-	"lflags": [
-		"/Users/tomo/Documents/D/libs/raylib-5.5_macos/lib/libraylib.a",
-		"-framework", "OpenGL",
-		"-framework", "Cocoa",
-		"-framework", "IOKit",
-		"-framework", "CoreAudio",
-		"-framework", "CoreVideo"
-	]
+	"license": "proprietary"
 }
