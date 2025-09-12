@@ -351,6 +351,7 @@ void clearFullLines(
 void drawField(
                 ref int[BOARD_WIDTH][BOARD_HEIGHT] board
             ){
+    // 設置されているブロックの描画
     foreach (y; 0 .. BOARD_HEIGHT) {
         foreach (x; 0 .. BOARD_WIDTH) {
             if (board[y][x] != 0) {
@@ -362,6 +363,26 @@ void drawField(
                 );
             }
         }
+    }
+
+    // 盤面の枠線の描画
+    foreach (x; 0 .. BOARD_WIDTH + 1) {
+        DrawLine(
+            SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 + x * TILE_SIZE,
+            SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2,
+            SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 + x * TILE_SIZE,
+            SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + BOARD_HEIGHT * TILE_SIZE,
+            Colors.LIGHTGRAY
+        );
+    }
+    foreach (y; 0 .. BOARD_HEIGHT + 1) {
+        DrawLine(
+            SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2,
+            SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + y * TILE_SIZE,
+            SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 + BOARD_WIDTH * TILE_SIZE,
+            SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + y * TILE_SIZE,
+            Colors.LIGHTGRAY
+        );
     }
 }
 
