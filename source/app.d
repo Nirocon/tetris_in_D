@@ -71,15 +71,23 @@ enum TILE_SIZE = 30;
 ///   blockX = int
 ///   blockY = int
 void spawnBlock(
+                ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
                 ref int[4][4] currentBlock,
                 ref int currentBlockIndex,
                 ref int blockX,
-                ref int blockY
+                ref int blockY,
+                ref int gameState,
+                ref string statusMessage
             ) {
     currentBlockIndex = uniform(0, 7);
     currentBlock = tetrominoShapes[currentBlockIndex];
     blockX = 3;
     blockY = 0;
+
+    if(checkCollision(board, currentBlock, blockX, blockY)) {
+        gameState = 2; // ゲームオーバー
+        statusMessage = "Game Over! Press Enter to Restart";
+    }
 }
 
 /// 
@@ -326,14 +334,16 @@ void hardDrop(
                 ref int[4][4] currentBlock,
                 ref int currentBlockIndex,
                 ref int blockX,
-                ref int blockY
+                ref int blockY,
+                ref int gameState,
+                ref string statusMessage
             ) {
     while (!checkCollision(board, currentBlock, blockX, blockY)) {
         blockY++;
     }
     blockY--;           // 衝突したから1マス戻す
     fixBlock(board, currentBlock, blockX, blockY);         // 盤面に固定
-    spawnBlock(currentBlock, currentBlockIndex, blockX, blockY);       // 次のブロック
+    spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);       // 次のブロック
 }
 
 /// 
@@ -425,13 +435,15 @@ void drop(
             ref int blockX,
             ref int[BOARD_WIDTH][BOARD_HEIGHT] board, 
             ref int[4][4] currentBlock, 
-            ref int currentBlockIndex
+            ref int currentBlockIndex,
+            ref int gameState,
+            ref string statusMessage
         ) {
     blockY++;
     if (checkCollision(board, currentBlock, blockX, blockY)) {
         blockY--; // 衝突したら1マス戻す
         fixBlock(board, currentBlock, blockX, blockY); // 盤面に固定
-        spawnBlock(currentBlock, currentBlockIndex, blockX, blockY); // 次のブロックの生成
+        spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage); // 次のブロックの生成
     }
 }
 
@@ -458,7 +470,7 @@ void main() {
                     gameState = 1; // プレイ中に遷移
                     statusMessage = null;
                     board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
-                    spawnBlock(currentBlock, currentBlockIndex, blockX, blockY);
+                    spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);
                     lastDrop = MonoTime.currTime; // 落下タイマーのリセット
                 }
                 break;
@@ -467,17 +479,17 @@ void main() {
                 if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT))  	blockX--;
                 if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
                 if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))
-                    drop(blockY, blockX, board, currentBlock, currentBlockIndex);
+                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage); // 1マス下に移動
                 if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
                 if (IsKeyPressed(KeyboardKey.KEY_X)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
                 if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	
-                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
+                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);  // ハードドロップ
 
                 adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
                 // 自動で下に落ちる処理
                 if (MonoTime.currTime - lastDrop > dropInterval) {
-                    drop(blockY, blockX, board, currentBlock, currentBlockIndex);
+                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage);
                     lastDrop = MonoTime.currTime;
                 }
                 break;
