@@ -470,7 +470,6 @@ void main() {
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
                     gameState = 1; // プレイ中に遷移
                     statusMessage = null;
-                    board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
                     spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);
                     lastDrop = MonoTime.currTime; // 落下タイマーのリセット
                 }
@@ -498,6 +497,8 @@ void main() {
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
                     gameState = 0; // 待機中に戻る
                     statusMessage = "Press Enter to Start";
+                    board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
+                    currentBlock = new int[4][4];
                 }
                 break;
             default:
