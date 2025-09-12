@@ -451,6 +451,7 @@ void main() {
     int gameState = 0; // 0: 待機中, 1: プレイ中, 2: ゲームオーバー
     string statusMessage = "Press Enter to Start";
     int statusMessageSize = 40;
+    int score = 0;
 
     int[BOARD_WIDTH][BOARD_HEIGHT] board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // Note the order of dimensions: [height][width]
     int[4][4] currentBlock;
@@ -506,15 +507,15 @@ void main() {
                 gameState = 0;
                 break;
         }
+
+        // 描画
         BeginDrawing();
         ClearBackground(Colors.RAYWHITE);
 
-        // 盤面の描画
-        drawField(board);
+        drawField(board);                           // 盤面の描画
+        drawBlock(currentBlock, blockX, blockY);    // ブロックの描画
 
-        // ブロックの描画
-        drawBlock(currentBlock, blockX, blockY);
-
+        // メッセージの描画
         if (statusMessage) {
             DrawRectangle(
                 SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, statusMessageSize) / 2 - 20,
