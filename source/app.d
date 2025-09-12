@@ -58,8 +58,8 @@ enum int[4][4][7] tetrominoShapes = [
     ]
 ];
 
-enum SCREEN_WIDTH = 800;
-enum SCREEN_HEIGHT = 600;
+enum SCREEN_WIDTH = 1680;
+enum SCREEN_HEIGHT = 1020;
 enum BOARD_WIDTH = 10;
 enum BOARD_HEIGHT = 20;
 enum TILE_SIZE = 30;
@@ -458,7 +458,7 @@ void main() {
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "D テトリス");
 
-    SetTargetFPS(60);
+    SetTargetFPS(24);
 
     MonoTime lastDrop = MonoTime.currTime;
     Duration dropInterval = 500.msecs;
