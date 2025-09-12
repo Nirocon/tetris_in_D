@@ -64,7 +64,7 @@ enum SCREEN_WIDTH = 1680;
 enum SCREEN_HEIGHT = 1020;
 enum BOARD_WIDTH = 10;
 enum BOARD_HEIGHT = 20;
-enum TILE_SIZE = 30;
+enum TILE_SIZE = 40;
 
 /// 
 /// Params:
