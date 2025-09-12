@@ -436,7 +436,9 @@ void drop(
 }
 
 void main() {
-    int[BOARD_WIDTH][BOARD_HEIGHT] board; // Note the order of dimensions: [height][width]
+    int gameState = 0; // 0: 待機中, 1: プレイ中, 2: ゲームオーバー
+
+    int[BOARD_WIDTH][BOARD_HEIGHT] board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // Note the order of dimensions: [height][width]
     int[4][4] currentBlock;
     int blockX = 3, blockY = 0;
     int currentBlockIndex;
@@ -450,25 +452,44 @@ void main() {
     Duration dropInterval = 500.msecs;
 
     while (!WindowShouldClose()) {
-        // 入力処理
-        if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT))  	blockX--;
-        if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
-        if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))
-            drop(blockY, blockX, board, currentBlock, currentBlockIndex);
-        
-		if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
-		if (IsKeyPressed(KeyboardKey.KEY_X)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
+        switch (gameState) {
+            case 0: // 待機中
+                if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
+                    gameState = 1; // プレイ中に遷移
+                    board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
+                    spawnBlock(currentBlock, currentBlockIndex, blockX, blockY);
+                    lastDrop = MonoTime.currTime; // 落下タイマーのリセット
+                }
+                break;
+            case 1: // プレイ中
+                // 入力処理
+                if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT))  	blockX--;
+                if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
+                if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))
+                    drop(blockY, blockX, board, currentBlock, currentBlockIndex);
+                if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
+                if (IsKeyPressed(KeyboardKey.KEY_X)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
+                if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	
+                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
 
-        if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
+                adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
-        adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
-
-        // 自動で下に落ちる処理
-        if (MonoTime.currTime - lastDrop > dropInterval) {
-            drop(blockY, blockX, board, currentBlock, currentBlockIndex);
-            lastDrop = MonoTime.currTime;
+                // 自動で下に落ちる処理
+                if (MonoTime.currTime - lastDrop > dropInterval) {
+                    drop(blockY, blockX, board, currentBlock, currentBlockIndex);
+                    lastDrop = MonoTime.currTime;
+                }
+                break;
+            case 2: // ゲームオーバー
+                if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
+                    gameState = 0; // 待機中に戻る
+                }
+                break;
+            default:
+                printf("Unknown game state: %d\n", gameState);
+                gameState = 0;
+                break;
         }
-
         BeginDrawing();
         ClearBackground(Colors.RAYWHITE);
 
