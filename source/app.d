@@ -131,7 +131,8 @@ void fixBlock(
                 ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
                 ref int[4][4] currentBlock,
                 ref int blockX,
-                ref int blockY
+                ref int blockY,
+                ref int score
             ) {
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
@@ -144,7 +145,8 @@ void fixBlock(
             }
         }
     }
-    clearFullLines(board);  // ラインをクリア
+    score += 100;  // ブロックを固定したらスコアを加算
+    clearFullLines(board, score);  // ラインをクリア
 }
 
 /// 
@@ -338,13 +340,14 @@ void hardDrop(
                 ref int blockX,
                 ref int blockY,
                 ref int gameState,
-                ref string statusMessage
+                ref string statusMessage,
+                ref int score
             ) {
     while (!checkCollision(board, currentBlock, blockX, blockY)) {
         blockY++;
     }
     blockY--;           // 衝突したから1マス戻す
-    fixBlock(board, currentBlock, blockX, blockY);         // 盤面に固定
+    fixBlock(board, currentBlock, blockX, blockY, score);         // 盤面に固定
     spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);       // 次のブロック
 }
 
@@ -352,8 +355,11 @@ void hardDrop(
 /// Params:
 ///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
 void clearFullLines(
-                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board
+                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
+                    ref int score
                 ) {
+    int clearedLines = 0;
+
     // ラインが揃っているかチェックして、揃っている場合は削除
     for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
         bool isFullLine = true;
@@ -377,8 +383,12 @@ void clearFullLines(
             foreach (x; 0 .. BOARD_WIDTH) {
                 board[0][x] = 0;
             }
+
+            clearedLines++;
             y++;  // 1行削除したので、再度同じyをチェックする
         }
+
+        score += clearedLines * clearedLines * 100;  // ラインを消したらスコアを加算
     }
 }
 
@@ -439,12 +449,13 @@ void drop(
             ref int[4][4] currentBlock, 
             ref int currentBlockIndex,
             ref int gameState,
-            ref string statusMessage
+            ref string statusMessage,
+            ref int score
         ) {
     blockY++;
     if (checkCollision(board, currentBlock, blockX, blockY)) {
         blockY--; // 衝突したら1マス戻す
-        fixBlock(board, currentBlock, blockX, blockY); // 盤面に固定
+        fixBlock(board, currentBlock, blockX, blockY, score); // 盤面に固定
         spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage); // 次のブロックの生成
     }
 }
@@ -482,17 +493,17 @@ void main() {
                 if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT))  	blockX--;
                 if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
                 if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))
-                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage); // 1マス下に移動
+                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score); // 1マス下に移動
                 if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
                 if (IsKeyPressed(KeyboardKey.KEY_X)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
                 if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	
-                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);  // ハードドロップ
+                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage, score);  // ハードドロップ
 
                 adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
                 // 自動で下に落ちる処理
                 if (MonoTime.currTime - lastDrop > dropInterval) {
-                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage);
+                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score);
                     lastDrop = MonoTime.currTime;
                 }
                 break;
@@ -502,6 +513,7 @@ void main() {
                     statusMessage = "Press Enter to Start";
                     board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
                     currentBlock = new int[4][4];
+                    score = 0;
                 }
                 break;
             default:
