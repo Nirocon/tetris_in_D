@@ -412,6 +412,21 @@ void drawField(
     }
 }
 
+void drop(
+            ref int blockY, 
+            ref int blockX,
+            ref int[BOARD_WIDTH][BOARD_HEIGHT] board, 
+            ref int[4][4] currentBlock, 
+            ref int currentBlockIndex
+        ) {
+    blockY++;
+    if (checkCollision(board, currentBlock, blockX, blockY)) {
+        blockY--; // 衝突したら1マス戻す
+        fixBlock(board, currentBlock, blockX, blockY); // 盤面に固定
+        spawnBlock(currentBlock, currentBlockIndex, blockX, blockY); // 次のブロックの生成
+    }
+}
+
 void main() {
     int[BOARD_WIDTH][BOARD_HEIGHT] board; // Note the order of dimensions: [height][width]
     int[4][4] currentBlock;
@@ -430,7 +445,8 @@ void main() {
         // 入力処理
         if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT))  	blockX--;
         if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
-        if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))     blockY++;
+        if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))
+            drop(blockY, blockX, board, currentBlock, currentBlockIndex);
         
 		if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
 		if (IsKeyPressed(KeyboardKey.KEY_X)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
@@ -441,12 +457,7 @@ void main() {
 
         // 自動で下に落ちる処理
         if (MonoTime.currTime - lastDrop > dropInterval) {
-            blockY++;
-            if (checkCollision(board, currentBlock, blockX, blockY)) {
-                blockY--; // 衝突したら1マス戻す
-                fixBlock(board, currentBlock, blockX, blockY); // 盤面に固定
-                spawnBlock(currentBlock, currentBlockIndex, blockX, blockY); // 次のブロックの生成
-            }
+            drop(blockY, blockX, board, currentBlock, currentBlockIndex);
             lastDrop = MonoTime.currTime;
         }
 
