@@ -447,7 +447,6 @@ void main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "D テトリス");
 
     SetTargetFPS(60);
-    spawnBlock(currentBlock, currentBlockIndex, blockX, blockY);
 
     MonoTime lastDrop = MonoTime.currTime;
     Duration dropInterval = 500.msecs;
