@@ -450,6 +450,7 @@ void drop(
 void main() {
     int gameState = 0; // 0: 待機中, 1: プレイ中, 2: ゲームオーバー
     string statusMessage = "Press Enter to Start";
+    int statusMessageSize = 40;
 
     int[BOARD_WIDTH][BOARD_HEIGHT] board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // Note the order of dimensions: [height][width]
     int[4][4] currentBlock;
@@ -515,17 +516,17 @@ void main() {
 
         if (statusMessage) {
             DrawRectangle(
-                SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, 20) / 2 - 20,
-                SCREEN_HEIGHT / 2 - 20,
-                MeasureText(statusMessage.ptr, 20) + 40,
-                40,
+                SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, statusMessageSize) / 2 - 20,
+                SCREEN_HEIGHT / 2 - statusMessageSize / 2 - 10,
+                MeasureText(statusMessage.ptr, statusMessageSize) + 40,
+                statusMessageSize + 20,
                 Color(255, 255, 255, 200)
             );
             DrawText(
                 statusMessage.ptr,
-                SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, 20) / 2,
-                SCREEN_HEIGHT / 2 - 10,
-                20,
+                SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, statusMessageSize) / 2,
+                SCREEN_HEIGHT / 2 - statusMessageSize / 2,
+                statusMessageSize,
                 Colors.DARKGRAY
             );
         }
