@@ -516,7 +516,8 @@ void main() {
         if (statusMessage) {
             DrawRectangle(
                 SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, 20) / 2 - 20,
-                SCREEN_HEIGHT / 2 - 20, MeasureText(statusMessage.ptr, 20) + 40,
+                SCREEN_HEIGHT / 2 - 20,
+                MeasureText(statusMessage.ptr, 20) + 40,
                 40,
                 Color(255, 255, 255, 200)
             );
