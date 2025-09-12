@@ -412,6 +412,14 @@ void drawField(
     }
 }
 
+/// 
+/// ブロックを1マス下に移動し、衝突したら固定して新しいブロックを生成する。
+/// Params:
+///   blockY = int
+///   blockX = int
+///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
+///   currentBlock = int[4][4]
+///   currentBlockIndex = int
 void drop(
             ref int blockY, 
             ref int blockX,
