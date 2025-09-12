@@ -220,7 +220,13 @@ void drawBlock(
             int drawX = blockX + x;
             int drawY = blockY + y;
             if (currentBlock[y][x] == 1 && drawX >= 0 && drawX < BOARD_WIDTH && drawY >= 0 && drawY < BOARD_HEIGHT) {
-                DrawRectangle(drawX * TILE_SIZE, drawY * TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1, Colors.MAROON);
+                DrawRectangle(
+                    SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 + drawX * TILE_SIZE,
+                    SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + drawY * TILE_SIZE,
+                    TILE_SIZE - 1,
+                    TILE_SIZE - 1,
+                    Colors.MAROON
+                );
             }
         }
     }
@@ -348,7 +354,12 @@ void drawField(
     foreach (y; 0 .. BOARD_HEIGHT) {
         foreach (x; 0 .. BOARD_WIDTH) {
             if (board[y][x] != 0) {
-                DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1, Colors.DARKGRAY);
+                DrawRectangle(
+                    SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 + x * TILE_SIZE,
+                    SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 +  y * TILE_SIZE,
+                    TILE_SIZE - 1, TILE_SIZE - 1,
+                    Colors.DARKGRAY
+                );
             }
         }
     }
@@ -374,7 +385,7 @@ void main() {
         if (IsKeyPressed(KeyboardKey.KEY_RIGHT)) 	blockX++;
         if (IsKeyPressed(KeyboardKey.KEY_DOWN))  	hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY);
 		if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlock(board, currentBlock, blockX, blockY);  // 回転処理
-        
+
         adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
         // 自動で下に落ちる処理
