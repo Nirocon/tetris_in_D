@@ -494,8 +494,8 @@ void main() {
                 if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
                 if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))
                     drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score); // 1マス下に移動
-                if (IsKeyPressed(KeyboardKey.KEY_Z)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
-                if (IsKeyPressed(KeyboardKey.KEY_X)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
+                if (IsKeyPressed(KeyboardKey.KEY_A)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
+                if (IsKeyPressed(KeyboardKey.KEY_S)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
                 if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	
                     hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage, score);  // ハードドロップ
 
