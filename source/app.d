@@ -5,6 +5,8 @@ import std.stdio;
 import std.random : uniform;
 import std.datetime : MonoTime, Duration;
 import std.string : format;
+import std.conv : to;
+
 
 import core.time : Duration, msecs;
 
@@ -104,12 +106,16 @@ int uniqueRandom(int n) {
     // 初回呼び出し時に配列を初期化
     if (count == 0) {
         used = new bool[n];
+        used[] = false;
     }
 
-    if (count == n) {
-        used[] = false;
-        count = 0;
+    printf("count: %d\n", count);
+    if (used[0]){
+        printf("used: true\n");
+    } else {
+        printf("used: false\n");
     }
+
 
     int index;
     do {
@@ -118,6 +124,12 @@ int uniqueRandom(int n) {
 
     used[index] = true;
     count++;
+
+    if (count == n) {
+        used[] = false;
+        count = 0;
+    }
+
     return index;
 }
 
@@ -161,7 +173,8 @@ void fixBlock(
                 ref int[4][4] currentBlock,
                 ref int blockX,
                 ref int blockY,
-                ref int score
+                ref int score,
+                ref Duration dropInterval,
             ) {
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
@@ -175,7 +188,7 @@ void fixBlock(
         }
     }
     score += 100;  // ブロックを固定したらスコアを加算
-    clearFullLines(board, score);  // ラインをクリア
+    clearFullLines(board, score, dropInterval);  // ラインをクリア
 }
 
 /// 
@@ -370,22 +383,26 @@ void hardDrop(
                 ref int blockY,
                 ref int gameState,
                 ref string statusMessage,
-                ref int score
+                ref int score,
+                ref Duration dropInterval
             ) {
     while (!checkCollision(board, currentBlock, blockX, blockY)) {
         blockY++;
     }
     blockY--;           // 衝突したから1マス戻す
-    fixBlock(board, currentBlock, blockX, blockY, score);         // 盤面に固定
+    fixBlock(board, currentBlock, blockX, blockY, score, dropInterval);         // 盤面に固定
     spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);       // 次のブロック
 }
 
 /// 
 /// Params:
 ///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
+///   score = int
+///   dropInterval =int 
 void clearFullLines(
                     ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                    ref int score
+                    ref int score,
+                    ref Duration dropInterval
                 ) {
     int clearedLines = 0;
 
@@ -415,6 +432,11 @@ void clearFullLines(
 
             clearedLines++;
             y++;  // 1行削除したので、再度同じyをチェックする
+
+            // ミノの落下間隔を短くする
+            if (dropInterval > 300.msecs) {
+                dropInterval -= 10.msecs;
+            }
         }
 
         score += clearedLines * clearedLines * 100;  // ラインを消したらスコアを加算
@@ -479,12 +501,13 @@ void drop(
             ref int currentBlockIndex,
             ref int gameState,
             ref string statusMessage,
-            ref int score
+            ref int score,
+            ref Duration dropInterval
         ) {
     blockY++;
     if (checkCollision(board, currentBlock, blockX, blockY)) {
         blockY--; // 衝突したら1マス戻す
-        fixBlock(board, currentBlock, blockX, blockY, score); // 盤面に固定
+        fixBlock(board, currentBlock, blockX, blockY, score, dropInterval); // 盤面に固定
         spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage); // 次のブロックの生成
     }
 }
@@ -506,7 +529,7 @@ void main() {
     SetTargetFPS(24);
 
     MonoTime lastDrop = MonoTime.currTime;
-    Duration dropInterval = 500.msecs;
+    Duration dropInterval = 700.msecs;
 
     while (!WindowShouldClose()) {
         switch (gameState) {
@@ -523,18 +546,18 @@ void main() {
                 if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT))  	blockX--;
                 if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
                 if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))
-                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score); // 1マス下に移動
+                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score, dropInterval); // 1マス下に移動
                 if (IsKeyPressed(KeyboardKey.KEY_A)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
                 if (IsKeyPressed(KeyboardKey.KEY_S)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
 
                 adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
                 if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	
-                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage, score);  // ハードドロップ
+                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage, score, dropInterval);  // ハードドロップ
 
                 // 自動で下に落ちる処理
                 if (MonoTime.currTime - lastDrop > dropInterval) {
-                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score);
+                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score, dropInterval);
                     lastDrop = MonoTime.currTime;
                 }
                 break;
