@@ -68,29 +68,34 @@ enum BOARD_WIDTH = 10;
 enum BOARD_HEIGHT = 20;
 enum TILE_SIZE = 40;
 
+struct MAIN_VARS {
+    int gameState;
+    string statusMessage;
+    int statusMessageSize;
+    int score;
+    string use_way;
+
+    int[BOARD_WIDTH][BOARD_HEIGHT] board;
+    int[4][4] currentBlock;
+    int blockX = 3, blockY;
+    int currentBlockIndex;
+
+    MonoTime lastDrop;
+    Duration dropInterval;
+}
+
 /// 
 /// Params:
-///   currentBlock = int[4][4]
-///   currentBlockIndex = int
-///   blockX = int
-///   blockY = int
-void spawnBlock(
-                ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                ref int[4][4] currentBlock,
-                ref int currentBlockIndex,
-                ref int blockX,
-                ref int blockY,
-                ref int gameState,
-                ref string statusMessage
-            ) {
-    currentBlockIndex = uniqueRandom(tetrominoShapes.length);
-    currentBlock = tetrominoShapes[currentBlockIndex];
-    blockX = 3;
-    blockY = 0;
+///   mainVars = MAIN_VARS
+void spawnBlock(ref MAIN_VARS mainVars) {
+    mainVars.currentBlockIndex = uniqueRandom(tetrominoShapes.length);
+    mainVars.currentBlock = tetrominoShapes[mainVars.currentBlockIndex];
+    mainVars.blockX = 3;
+    mainVars.blockY = 0;
 
-    if(checkCollision(board, currentBlock, blockX, blockY)) {
-        gameState = 2; // ゲームオーバー
-        statusMessage = "Game Over! Press Enter to Restart";
+    if(checkCollision(mainVars)) {
+        mainVars.gameState = 2; // ゲームオーバー
+        mainVars.statusMessage = "Game Over! Press Enter to Restart";
     }
 }
 
@@ -135,25 +140,17 @@ int uniqueRandom(int n) {
 
 /// 
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   currentBlock = int[4][4]
-///   blockX = int
-///   blockY = int
+///   mainVars = MAIN_VARS
 /// Returns: bool
-bool checkCollision(
-                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                    ref int[4][4] currentBlock, 
-                    ref int blockX,
-                    ref int blockY
-                ) {
+bool checkCollision(ref MAIN_VARS mainVars) {
     // 回転したブロックで衝突をチェック
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
-            int drawX = blockX + x;
-            int drawY = blockY + y;
-            if (currentBlock[y][x] == 1) {
+            int drawX = mainVars.blockX + x;
+            int drawY = mainVars.blockY + y;
+            if (mainVars.currentBlock[y][x] == 1) {
                 // ボードの範囲外か、すでにブロックがある場合は衝突
-                if (drawX < 0 || drawX >= BOARD_WIDTH || drawY >= BOARD_HEIGHT || board[drawY][drawX] != 0) {
+                if (drawX < 0 || drawX >= BOARD_WIDTH || drawY >= BOARD_HEIGHT || mainVars.board[drawY][drawX] != 0) {
                     return true;
                 }
             }
@@ -164,42 +161,32 @@ bool checkCollision(
 
 /// 
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   currentBlock = int[4][4]
-///   blockX = int
-///   blockY = int
-void fixBlock(
-                ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                ref int[4][4] currentBlock,
-                ref int blockX,
-                ref int blockY,
-                ref int score,
-                ref Duration dropInterval,
-            ) {
+///   mainVars = MAIN_VARS
+void fixBlock(ref MAIN_VARS mainVars) {
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
-            int drawX = blockX + x;
-            int drawY = blockY + y;
-            if (currentBlock[y][x] == 1) {
+            int drawX = mainVars.blockX + x;
+            int drawY = mainVars.blockY + y;
+            if (mainVars.currentBlock[y][x] == 1) {
                 if (drawX >= 0 && drawX < BOARD_WIDTH && drawY >= 0 && drawY < BOARD_HEIGHT) {
-                    board[drawY][drawX] = 1;
+                    mainVars.board[drawY][drawX] = 1;
                 }
             }
         }
     }
-    score += 100;  // ブロックを固定したらスコアを加算
-    clearFullLines(board, score, dropInterval);  // ラインをクリア
+    mainVars.score += 100;  // ブロックを固定したらスコアを加算
+    clearFullLines(mainVars);  // ラインをクリア
 }
 
 /// 
 /// Params:
-///   currentBlock = int[4][4]
+///   mainVars = MAIN_VARS
 /// Returns: int
-int getLeftmostX(ref int[4][4] currentBlock) {
+int getLeftmostX(ref MAIN_VARS mainVars) {
     int minX = 4;
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
-            if (currentBlock[y][x] == 1 && x < minX) {
+            if (mainVars.currentBlock[y][x] == 1 && x < minX) {
                 minX = x;
             }
         }
@@ -209,13 +196,13 @@ int getLeftmostX(ref int[4][4] currentBlock) {
 
 /// 
 /// Params:
-///   currentBlock = int[4][4]
+///   mainVars = MAIN_VARS
 /// Returns: int
-int getRightmostX(ref int[4][4] currentBlock) {
+int getRightmostX(ref MAIN_VARS mainVars) {
     int maxX = -1;
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
-            if (currentBlock[y][x] == 1 && x > maxX) {
+            if (mainVars.currentBlock[y][x] == 1 && x > maxX) {
                 maxX = x;
             }
         }
@@ -225,55 +212,41 @@ int getRightmostX(ref int[4][4] currentBlock) {
 
 /// 
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   currentBlock = int[4][4]
-///   blockX = int
-///   blockY = int
-void adjustBlockPosition(
-                            ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                            ref int[4][4] currentBlock,
-                            ref int blockX,
-                            ref int blockY
-                        ) {
-    int left = getLeftmostX(currentBlock);
-    int right = getRightmostX(currentBlock);
+///   mainVars = MAIN_VARS
+void adjustBlockPosition(ref MAIN_VARS mainVars) {
+    int left = getLeftmostX(mainVars);
+    int right = getRightmostX(mainVars);
 
     // 左端が画面外 or 衝突してたら右にずらす
-    while (blockX + left < 0 || checkCollision(board, currentBlock, blockX, blockY)) {
-        blockX++;
-        if (checkCollision(board, currentBlock, blockX, blockY)) {
-            blockX--; // ずらしても解決しなかったら戻してbreak
+    while (mainVars.blockX + left < 0 || checkCollision(mainVars)) {
+        mainVars.blockX++;
+        if (checkCollision(mainVars)) {
+            mainVars.blockX--; // ずらしても解決しなかったら戻してbreak
             break;
         }
-        left = getLeftmostX(currentBlock);
+        left = getLeftmostX(mainVars);
     }
 
     // 右端が画面外 or 衝突してたら左にずらす
-    while (blockX + right >= BOARD_WIDTH || checkCollision(board, currentBlock, blockX, blockY)) {
-        blockX--;
-        if (checkCollision(board, currentBlock, blockX, blockY)) {
-            blockX++; // ずらしても解決しなかったら戻してbreak
+    while (mainVars.blockX + right >= BOARD_WIDTH || checkCollision(mainVars)) {
+        mainVars.blockX--;
+        if (checkCollision(mainVars)) {
+            mainVars.blockX++; // ずらしても解決しなかったら戻してbreak
             break;
         }
-        right = getRightmostX(currentBlock);
+        right = getRightmostX(mainVars);
     }
 }
 
 /// 
 /// Params:
-///   currentBlock = int[4][4]
-///   blockX = int
-///   blockY = int
-void drawBlock(
-                ref int[4][4] currentBlock,
-                ref int blockX,
-                ref int blockY
-            ) {
+///   mainVars = MAIN_VARS
+void drawBlock(ref MAIN_VARS mainVars) {
     foreach (y; 0 .. 4) {
         foreach (x; 0 .. 4) {
-            int drawX = blockX + x;
-            int drawY = blockY + y;
-            if (currentBlock[y][x] == 1 && drawX >= 0 && drawX < BOARD_WIDTH && drawY >= 0 && drawY < BOARD_HEIGHT) {
+            int drawX = mainVars.blockX + x;
+            int drawY = mainVars.blockY + y;
+            if (mainVars.currentBlock[y][x] == 1 && drawX >= 0 && drawX < BOARD_WIDTH && drawY >= 0 && drawY < BOARD_HEIGHT) {
                 DrawRectangle(
                     SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 + drawX * TILE_SIZE,
                     SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + drawY * TILE_SIZE,
@@ -289,121 +262,76 @@ void drawBlock(
 /// 
 /// Rotate the block 90 degrees to the left (clockwise).
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   currentBlock = int[4][4]
-///   blockX = int
-///   blockY = int
-void rotateBlockLeft(
-                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                    ref int[4][4] currentBlock,
-                    ref int blockX,
-                    ref int blockY
-                ) {
+///   mainVars = MAIN_VARS
+void rotateBlockLeft(ref MAIN_VARS mainVars) {
     int[4][4] rotatedBlock;
     foreach (y; 0 .. 4)
         foreach (x; 0 .. 4)
-            rotatedBlock[3 - x][y] = currentBlock[y][x];
+            rotatedBlock[3 - x][y] = mainVars.currentBlock[y][x];
 
-    if (!checkCollision(board, rotatedBlock, blockX, blockY)) {
-        currentBlock = rotatedBlock;
+    if (!checkCollision(mainVars)) {
+        mainVars.currentBlock = rotatedBlock;
     } else {
-		tryWallKick(board, currentBlock, rotatedBlock, blockX, blockY);
+		tryWallKick(mainVars, rotatedBlock);
 	}
 }
 
 /// 
 /// Rotate the block 90 degrees to the right (clockwise).
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   currentBlock = int[4][4]
-///   blockX = int
-///   blockY = int
-void rotateBlockRight(
-                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                    ref int[4][4] currentBlock,
-                    ref int blockX,
-                    ref int blockY
-                ) {
+///   mainVars = MAIN_VARS
+void rotateBlockRight(ref MAIN_VARS mainVars) {
     int[4][4] rotatedBlock;
     foreach (y; 0 .. 4)
         foreach (x; 0 .. 4)
-            rotatedBlock[x][3 - y] = currentBlock[y][x];
+            rotatedBlock[x][3 - y] = mainVars.currentBlock[y][x];
 
-    if (!checkCollision(board, rotatedBlock, blockX, blockY)) {
-        currentBlock = rotatedBlock;
+    if (!checkCollision(mainVars)) {
+        mainVars.currentBlock = rotatedBlock;
     } else {
-		tryWallKick(board, currentBlock, rotatedBlock, blockX, blockY);
+		tryWallKick(mainVars, rotatedBlock);
 	}
 }
 
 /// 
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   currentBlock = int[4][4]
+///   mainVars = MAIN_VARS
 ///   rotatedBlock = int[4][4]
-///   blockX = int
-///   blockY = int
-void tryWallKick(
-                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                    ref int[4][4] currentBlock,
-                    ref int[4][4] rotatedBlock,
-                    ref int blockX,
-                    ref int blockY
-                ) {
+void tryWallKick(ref MAIN_VARS mainVars, int[4][4] rotatedBlock) {
     // 試しに左に1マスずらしてチェック
-    blockX -= 1;
-    if (!checkCollision(board, rotatedBlock, blockX, blockY)) {
-        currentBlock = rotatedBlock;
+    mainVars.blockX -= 1;
+    if (!checkCollision(mainVars)) {
+        mainVars.currentBlock = rotatedBlock;
         return;
     }
 
     // 左にずらしてダメだったら元に戻して、右に1マスずらす
-    blockX += 2;
-    if (!checkCollision(board, rotatedBlock, blockX, blockY)) {
-        currentBlock = rotatedBlock;
+    mainVars.blockX += 2;
+    if (!checkCollision(mainVars)) {
+        mainVars.currentBlock = rotatedBlock;
         return;
     }
 
     // それでもダメなら元の位置に戻して何もしない
-    blockX -= 1;
+    mainVars.blockX -= 1;
 }
 
 /// 
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   currentBlock = int[4][4]
-///   currentBlockIndex = int
-///   blockX = int
-///   blockY = int
-void hardDrop(
-                ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                ref int[4][4] currentBlock,
-                ref int currentBlockIndex,
-                ref int blockX,
-                ref int blockY,
-                ref int gameState,
-                ref string statusMessage,
-                ref int score,
-                ref Duration dropInterval
-            ) {
-    while (!checkCollision(board, currentBlock, blockX, blockY)) {
-        blockY++;
+///   mainVars = MAIN_VARS
+void hardDrop(ref MAIN_VARS mainVars) {
+    while (!checkCollision(mainVars)) {
+        mainVars.blockY++;
     }
-    blockY--;           // 衝突したから1マス戻す
-    fixBlock(board, currentBlock, blockX, blockY, score, dropInterval);         // 盤面に固定
-    spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);       // 次のブロック
+    mainVars.blockY--;           // 衝突したから1マス戻す
+    fixBlock(mainVars);         // 盤面に固定
+    spawnBlock(mainVars);       // 次のブロック
 }
 
 /// 
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   score = int
-///   dropInterval =int 
-void clearFullLines(
-                    ref int[BOARD_WIDTH][BOARD_HEIGHT] board,
-                    ref int score,
-                    ref Duration dropInterval
-                ) {
+///   mainVars = MAIN_VARS
+void clearFullLines(ref MAIN_VARS mainVars) {
     int clearedLines = 0;
 
     // ラインが揃っているかチェックして、揃っている場合は削除
@@ -411,7 +339,7 @@ void clearFullLines(
         bool isFullLine = true;
         // 各行をチェック
         foreach (x; 0 .. BOARD_WIDTH) {
-            if (board[y][x] == 0) {
+            if (mainVars.board[y][x] == 0) {
                 isFullLine = false;
                 break;
             }
@@ -422,38 +350,36 @@ void clearFullLines(
             // 行を下にシフト
             for (int shiftY = y; shiftY > 0; shiftY--) {
                 foreach (x; 0 .. BOARD_WIDTH) {
-                    board[shiftY][x] = board[shiftY - 1][x];
+                    mainVars.board[shiftY][x] = mainVars.board[shiftY - 1][x];
                 }
             }
             // 最上行をクリア
             foreach (x; 0 .. BOARD_WIDTH) {
-                board[0][x] = 0;
+                mainVars.board[0][x] = 0;
             }
 
             clearedLines++;
             y++;  // 1行削除したので、再度同じyをチェックする
 
             // ミノの落下間隔を短くする
-            if (dropInterval > 300.msecs) {
-                dropInterval -= 10.msecs;
+            if (mainVars.dropInterval > 300.msecs) {
+                mainVars.dropInterval -= 10.msecs;
             }
         }
 
-        score += clearedLines * clearedLines * 100;  // ラインを消したらスコアを加算
+        mainVars.score += clearedLines * clearedLines * 100;  // ラインを消したらスコアを加算
     }
 }
 
 /// 
 /// 盤面の描画をする。
 /// Params:
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-void drawField(
-                ref int[BOARD_WIDTH][BOARD_HEIGHT] board
-            ){
+///   mainVars = MAIN_VARS
+void drawField(ref MAIN_VARS mainVars) {
     // 設置されているブロックの描画
     foreach (y; 0 .. BOARD_HEIGHT) {
         foreach (x; 0 .. BOARD_WIDTH) {
-            if (board[y][x] != 0) {
+            if (mainVars.board[y][x] != 0) {
                 DrawRectangle(
                     SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 + x * TILE_SIZE,
                     SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 +  y * TILE_SIZE,
@@ -488,99 +414,87 @@ void drawField(
 /// 
 /// ブロックを1マス下に移動し、衝突したら固定して新しいブロックを生成する。
 /// Params:
-///   blockY = int
-///   blockX = int
-///   board = int[BOARD_WIDTH][BOARD_HEIGHT]
-///   currentBlock = int[4][4]
-///   currentBlockIndex = int
-void drop(
-            ref int blockY, 
-            ref int blockX,
-            ref int[BOARD_WIDTH][BOARD_HEIGHT] board, 
-            ref int[4][4] currentBlock, 
-            ref int currentBlockIndex,
-            ref int gameState,
-            ref string statusMessage,
-            ref int score,
-            ref Duration dropInterval
-        ) {
-    blockY++;
-    if (checkCollision(board, currentBlock, blockX, blockY)) {
-        blockY--; // 衝突したら1マス戻す
-        fixBlock(board, currentBlock, blockX, blockY, score, dropInterval); // 盤面に固定
-        spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage); // 次のブロックの生成
+///   mainVars = MAIN_VARS
+void drop(ref MAIN_VARS mainVars) {
+    mainVars.blockY++;
+    if (checkCollision(mainVars)) {
+        mainVars.blockY--; // 衝突したら1マス戻す
+        fixBlock(mainVars); // 盤面に固定
+        spawnBlock(mainVars); // 次のブロックの生成
     }
 }
 
 void main() {
-    int gameState = 0; // 0: 待機中, 1: プレイ中, 2: ゲームオーバー
-    string statusMessage = "Press Enter to Start";
-    int statusMessageSize = 40;
-    int score = 0;
-    string use_way = "A/D : move\n\nSPACE : rotate\n\nS : soft drop\n\nENTER : hard drop";
+    MAIN_VARS mainVars = MAIN_VARS();
 
-    int[BOARD_WIDTH][BOARD_HEIGHT] board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // Note the order of dimensions: [height][width]
-    int[4][4] currentBlock;
-    int blockX = 3, blockY = 0;
-    int currentBlockIndex;
+    mainVars.gameState = 0, // 0: 待機中, 1: プレイ中, 2: ゲームオーバー
+    mainVars.statusMessage = "Press Enter to Start",
+    mainVars.statusMessageSize = 40,
+    mainVars.score = 0,
+    mainVars.use_way = "A/D : move\n\nSPACE : rotate\n\nS : soft drop\n\nENTER : hard drop",
+    mainVars.board = new int[BOARD_WIDTH][BOARD_HEIGHT],
+    mainVars.currentBlock = new int[4][4],
+    mainVars.blockX = 3,
+    mainVars.blockY = 0,
+    mainVars.currentBlockIndex = 0,
+    mainVars.lastDrop = MonoTime.currTime,
+    mainVars.dropInterval = 700.msecs,
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "D テトリス");
 
     SetTargetFPS(24);
 
-    MonoTime lastDrop = MonoTime.currTime;
-    Duration dropInterval = 700.msecs;
 
     while (!WindowShouldClose()) {
-        switch (gameState) {
+        switch (mainVars.gameState) {
             case 0: // 待機中
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
-                    gameState = 1; // プレイ中に遷移
-                    statusMessage = null;
-                    spawnBlock(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage);
-                    lastDrop = MonoTime.currTime; // 落下タイマーのリセット
+                    mainVars.gameState = 1; // プレイ中に遷移
+                    mainVars.statusMessage = null;
+                    spawnBlock(mainVars);
+                    mainVars.lastDrop = MonoTime.currTime; // 落下タイマーのリセット
                 }
                 break;
             case 1: // プレイ中
                 // 入力処理
                 // 左右移動 (←キー or →キー or Aキー or Dキー)
                 if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT) || IsKeyPressed(KeyboardKey.KEY_A) || IsKeyPressedRepeat(KeyboardKey.KEY_A))  	
-                    blockX--;
+                    mainVars.blockX--;
                 if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT) || IsKeyPressed(KeyboardKey.KEY_D) || IsKeyPressedRepeat(KeyboardKey.KEY_D))
-                    blockX++;
+                    mainVars.blockX++;
                 // ソフトドロップ (↓キー or Sキー)
                 if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN) || IsKeyPressed(KeyboardKey.KEY_S) || IsKeyPressedRepeat(KeyboardKey.KEY_S))
-                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score, dropInterval); // 1マス下に移動
+                    drop(mainVars); // 1マス下に移動
                 // 回転 (Qキー or Spaceキーで左回転, Eキーで右回転)
                 if (IsKeyPressed(KeyboardKey.KEY_Q) || IsKeyPressed(KeyboardKey.KEY_SPACE))
-                    rotateBlockLeft(board, currentBlock, blockX, blockY);
+                    rotateBlockLeft(mainVars);
                 if (IsKeyPressed(KeyboardKey.KEY_E))
-                    rotateBlockRight(board, currentBlock, blockX, blockY);
+                    rotateBlockRight(mainVars);
 
-                adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
+                adjustBlockPosition(mainVars);  // テトミノの位置補正
 
                 // ハードドロップ (Shiftキー or Enterキー or Wキー)
                 if (IsKeyPressed(KeyboardKey.KEY_LEFT_SHIFT) || IsKeyPressed(KeyboardKey.KEY_RIGHT_SHIFT) || IsKeyPressed(KeyboardKey.KEY_ENTER) || IsKeyPressedRepeat(KeyboardKey.KEY_W))	
-                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage, score, dropInterval);
+                    hardDrop(mainVars);
 
                 // 自動で下に落ちる処理
-                if (MonoTime.currTime - lastDrop > dropInterval) {
-                    drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score, dropInterval);
-                    lastDrop = MonoTime.currTime;
+                if (MonoTime.currTime - mainVars.lastDrop > mainVars.dropInterval) {
+                    drop(mainVars);
+                    mainVars.lastDrop = MonoTime.currTime;
                 }
                 break;
             case 2: // ゲームオーバー
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
-                    gameState = 0; // 待機中に戻る
-                    statusMessage = "Press Enter to Start";
-                    board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
-                    currentBlock = new int[4][4];
-                    score = 0;
+                    mainVars.gameState = 0; // 待機中に戻る
+                    mainVars.statusMessage = "Press Enter to Start";
+                    mainVars.board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
+                    mainVars.currentBlock = new int[4][4];
+                    mainVars.score = 0;
                 }
                 break;
             default:
-                printf("Unknown game state: %d\n", gameState);
-                gameState = 0;
+                printf("Unknown game state: %d\n", mainVars.gameState);
+                mainVars.gameState = 0;
                 break;
         }
 
@@ -588,30 +502,30 @@ void main() {
         BeginDrawing();
         ClearBackground(Colors.BLACK);
 
-        drawField(board);                           // 盤面の描画
-        drawBlock(currentBlock, blockX, blockY);    // ブロックの描画
+        drawField(mainVars);                           // 盤面の描画
+        drawBlock(mainVars);    // ブロックの描画
 
         // メッセージの描画
-        if (statusMessage) {
+        if (mainVars.statusMessage) {
             DrawRectangle(
-                SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, statusMessageSize) / 2 - 20,
-                SCREEN_HEIGHT / 2 - statusMessageSize / 2 - 10,
-                MeasureText(statusMessage.ptr, statusMessageSize) + 40,
-                statusMessageSize + 20,
+                SCREEN_WIDTH / 2 - MeasureText(mainVars.statusMessage.ptr, mainVars.statusMessageSize) / 2 - 20,
+                SCREEN_HEIGHT / 2 - mainVars.statusMessageSize / 2 - 10,
+                MeasureText(mainVars.statusMessage.ptr, mainVars.statusMessageSize) + 40,
+                mainVars.statusMessageSize + 20,
                 Color(0, 0, 0, 200)
             );
             DrawText(
-                statusMessage.ptr,
-                SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, statusMessageSize) / 2,
-                SCREEN_HEIGHT / 2 - statusMessageSize / 2,
-                statusMessageSize,
+                mainVars.statusMessage.ptr,
+                SCREEN_WIDTH / 2 - MeasureText(mainVars.statusMessage.ptr, mainVars.statusMessageSize) / 2,
+                SCREEN_HEIGHT / 2 - mainVars.statusMessageSize / 2,
+                mainVars.statusMessageSize,
                 Colors.LIGHTGRAY
             );
         }
 
         //スコアの描画
         DrawText(
-            format("Score: %7d", score).ptr,
+            format("Score: %7d", mainVars.score).ptr,
             SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 - 150,
             SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + 20,
             20,
@@ -619,7 +533,7 @@ void main() {
         );
         // 操作方法の描画
         DrawText(
-            use_way.ptr,
+            mainVars.use_way.ptr,
             SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 - 250,
             SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + 70,
             20,
