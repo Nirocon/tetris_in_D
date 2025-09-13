@@ -4,8 +4,11 @@ import raylib.raylib_types;
 import std.stdio;
 import std.random : uniform;
 import std.datetime : MonoTime, Duration;
-import std.string : format;
+import std.string;
 import std.conv : to;
+import std.file : readText, write;
+import std.algorithm : sort;
+import std.array;
 
 
 import core.time : Duration, msecs;
@@ -66,6 +69,7 @@ struct MAIN_VARS {
     string statusMessage;
     int statusMessageSize;
     int score;
+    int[] scoreHistory;
     string use_way;
 
     int[BOARD_WIDTH][BOARD_HEIGHT] board;
@@ -89,6 +93,8 @@ void spawnBlock(ref MAIN_VARS mainVars) {
     if(checkCollision(mainVars)) {
         mainVars.gameState = 2; // ゲームオーバー
         mainVars.statusMessage = "Game Over! Press Enter to Restart";
+        addScoreToHistory(mainVars); // スコア履歴に追加
+        saveScoreHistory(mainVars);  // スコア履歴を保存
     }
 }
 
@@ -431,6 +437,49 @@ void drop(ref MAIN_VARS mainVars) {
     }
 }
 
+///
+/// ファイルから過去のスコアを読み込む。
+/// Params:
+///   mainVars = MAIN_VARS
+void loadScoreHistory(ref MAIN_VARS mainVars) {
+    try {
+        string[] lines = readText("score_history.txt").splitLines();
+        foreach (line; lines) {
+            if (line.length > 0) {
+                mainVars.scoreHistory ~= line.to!int;
+            }
+        }
+    } catch (Exception e) {
+        // ファイルが存在しない場合や読み込みエラーは無視
+        writeln("No previous score history found or error reading file.");
+    }
+
+    // スコア履歴を降順にソート
+    mainVars.scoreHistory.sort!((a, b) => b < a);
+}
+
+///
+/// スコア履歴に現在のスコアを追加する。
+/// Params:
+///   mainVars = MAIN_VARS
+void addScoreToHistory(ref MAIN_VARS mainVars) {
+    mainVars.scoreHistory ~= mainVars.score;
+    // スコア履歴を降順にソート
+    mainVars.scoreHistory.sort!((a, b) => b < a);
+}
+
+///
+/// ファイルにスコアを保存する。
+/// Params:
+///   mainVars = MAIN_VARS
+void saveScoreHistory(ref MAIN_VARS mainVars) {
+    string[] lines;
+    foreach (score; mainVars.scoreHistory) {
+        lines ~= score.to!string;
+    }
+    write("score_history.txt", lines.join("\n"));
+}
+
 void main() {
     MAIN_VARS mainVars = MAIN_VARS();
 
@@ -438,6 +487,7 @@ void main() {
     mainVars.statusMessage = "Press Enter to Start",
     mainVars.statusMessageSize = 40,
     mainVars.score = 0,
+    mainVars.scoreHistory = [],
     mainVars.use_way = "A/D : move\n\nSPACE : rotate\n\nS : soft drop\n\nENTER : hard drop",
     mainVars.board = new int[BOARD_WIDTH][BOARD_HEIGHT],
     mainVars.blockX = 3,
@@ -446,10 +496,11 @@ void main() {
     mainVars.lastDrop = MonoTime.currTime,
     mainVars.dropInterval = 700.msecs,
 
+    loadScoreHistory(mainVars); // 過去のスコア履歴を読み込む
+
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "D テトリス");
 
     SetTargetFPS(24);
-
 
     while (!WindowShouldClose()) {
         switch (mainVars.gameState) {
@@ -545,6 +596,30 @@ void main() {
             20,
             Colors.LIGHTGRAY
         );
+
+        // スコア履歴の描画
+        DrawText(
+            "Score History",
+            SCREEN_WIDTH / 2 + BOARD_WIDTH * TILE_SIZE / 2 + 50,
+            SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + 20,
+            20,
+            Colors.LIGHTGRAY
+        );
+        int historyY = SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + 50;
+        int maxHistoryToShow = 10; // 最大表示数
+        int count = 0;
+        foreach (score; mainVars.scoreHistory) {
+            if (count >= maxHistoryToShow) break;
+            DrawText(
+                format("%2d : %10d", count + 1, score).ptr,
+                SCREEN_WIDTH / 2 + BOARD_WIDTH * TILE_SIZE / 2 + 50,
+                historyY,
+                20,
+                Colors.LIGHTGRAY
+            );
+            historyY += 30;
+            count++;
+        }
 
         EndDrawing();
     }
