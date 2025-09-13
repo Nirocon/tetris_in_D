@@ -10,7 +10,7 @@ import std.conv : to;
 
 import core.time : Duration, msecs;
 
-enum int[4][4][7] tetrominoShapes = [
+enum int[][][7] tetrominoShapes = [
     // I
     [
         [0, 0, 0, 0],
@@ -20,45 +20,38 @@ enum int[4][4][7] tetrominoShapes = [
     ],
     // J
     [
-        [0, 0, 0, 0],
-        [1, 1, 1, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 0],
+        [0, 0, 0],
+        [1, 1, 1],
+        [0, 0, 1],
     ],
     // L
     [
-        [0, 0, 0, 0],
-        [0, 1, 1, 1],
-        [0, 1, 0, 0],
-        [0, 0, 0, 0],
+        [0, 0, 0],
+        [1, 1, 1],
+        [1, 0, 0],
     ],
     // O
     [
-        [0, 0, 0, 0],
-        [0, 1, 1, 0],
-        [0, 1, 1, 0],
-        [0, 0, 0, 0],
+        [1, 1],
+        [1, 1],
     ],
     // S
     [
-        [0, 0, 0, 0],
-        [0, 1, 1, 0],
-        [1, 1, 0, 0],
-        [0, 0, 0, 0],
+        [0, 1, 1],
+        [1, 1, 0],
+        [0, 0, 0],
     ],
     // T
     [
-        [0, 0, 0, 0],
-        [1, 1, 1, 0],
-        [0, 1, 0, 0],
-        [0, 0, 0, 0],
+        [0, 0, 0],
+        [1, 1, 1],
+        [0, 1, 0],
     ],
     // Z
     [
-        [0, 0, 0, 0],
-        [1, 1, 0, 0],
-        [0, 1, 1, 0],
-        [0, 0, 0, 0],
+        [1, 1, 0],
+        [0, 1, 1],
+        [0, 0, 0],
     ]
 ];
 
@@ -76,7 +69,7 @@ struct MAIN_VARS {
     string use_way;
 
     int[BOARD_WIDTH][BOARD_HEIGHT] board;
-    int[4][4] currentBlock;
+    int[][] currentBlock;
     int blockX = 3, blockY;
     int currentBlockIndex;
 
@@ -143,11 +136,12 @@ int uniqueRandom(int n) {
 ///   mainVars = MAIN_VARS
 /// Returns: bool
 bool checkCollision(ref MAIN_VARS mainVars) {
+    ulong blockSize = mainVars.currentBlock.length;
     // 回転したブロックで衝突をチェック
-    foreach (y; 0 .. 4) {
-        foreach (x; 0 .. 4) {
-            int drawX = mainVars.blockX + x;
-            int drawY = mainVars.blockY + y;
+    foreach (y; 0 .. blockSize) {
+        foreach (x; 0 .. blockSize) {
+            int drawX = mainVars.blockX + to!int(x);
+            int drawY = mainVars.blockY + to!int(y);
             if (mainVars.currentBlock[y][x] == 1) {
                 // ボードの範囲外か、すでにブロックがある場合は衝突
                 if (drawX < 0 || drawX >= BOARD_WIDTH || drawY >= BOARD_HEIGHT || mainVars.board[drawY][drawX] != 0) {
@@ -163,10 +157,11 @@ bool checkCollision(ref MAIN_VARS mainVars) {
 /// Params:
 ///   mainVars = MAIN_VARS
 void fixBlock(ref MAIN_VARS mainVars) {
-    foreach (y; 0 .. 4) {
-        foreach (x; 0 .. 4) {
-            int drawX = mainVars.blockX + x;
-            int drawY = mainVars.blockY + y;
+    ulong blockSize = mainVars.currentBlock.length;
+    foreach (y; 0 .. blockSize) {
+        foreach (x; 0 .. blockSize) {
+            int drawX = mainVars.blockX + to!int(x);
+            int drawY = mainVars.blockY + to!int(y);
             if (mainVars.currentBlock[y][x] == 1) {
                 if (drawX >= 0 && drawX < BOARD_WIDTH && drawY >= 0 && drawY < BOARD_HEIGHT) {
                     mainVars.board[drawY][drawX] = 1;
@@ -184,10 +179,11 @@ void fixBlock(ref MAIN_VARS mainVars) {
 /// Returns: int
 int getLeftmostX(ref MAIN_VARS mainVars) {
     int minX = 4;
-    foreach (y; 0 .. 4) {
-        foreach (x; 0 .. 4) {
-            if (mainVars.currentBlock[y][x] == 1 && x < minX) {
-                minX = x;
+    ulong blockSize = mainVars.currentBlock.length;
+    foreach (y; 0 .. blockSize) {
+        foreach (x; 0 .. blockSize) {
+            if (mainVars.currentBlock[y][x] == 1 && to!int(x) < minX) {
+                minX = to!int(x);
             }
         }
     }
@@ -200,10 +196,11 @@ int getLeftmostX(ref MAIN_VARS mainVars) {
 /// Returns: int
 int getRightmostX(ref MAIN_VARS mainVars) {
     int maxX = -1;
-    foreach (y; 0 .. 4) {
-        foreach (x; 0 .. 4) {
-            if (mainVars.currentBlock[y][x] == 1 && x > maxX) {
-                maxX = x;
+    ulong blockSize = mainVars.currentBlock.length;
+    foreach (y; 0 .. blockSize) {
+        foreach (x; 0 .. blockSize) {
+            if (mainVars.currentBlock[y][x] == 1 && to!int(x) > maxX) {
+                maxX = to!int(x);
             }
         }
     }
@@ -242,10 +239,12 @@ void adjustBlockPosition(ref MAIN_VARS mainVars) {
 /// Params:
 ///   mainVars = MAIN_VARS
 void drawBlock(ref MAIN_VARS mainVars) {
-    foreach (y; 0 .. 4) {
-        foreach (x; 0 .. 4) {
-            int drawX = mainVars.blockX + x;
-            int drawY = mainVars.blockY + y;
+    if (!mainVars.currentBlock) return; // currentBlockがnullの場合は何もしない
+    ulong blockSize = mainVars.currentBlock.length;
+    foreach (y; 0 .. blockSize) {
+        foreach (x; 0 .. blockSize) {
+            int drawX = mainVars.blockX + to!int(x);
+            int drawY = mainVars.blockY + to!int(y);
             if (mainVars.currentBlock[y][x] == 1 && drawX >= 0 && drawX < BOARD_WIDTH && drawY >= 0 && drawY < BOARD_HEIGHT) {
                 DrawRectangle(
                     SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 + drawX * TILE_SIZE,
@@ -264,10 +263,18 @@ void drawBlock(ref MAIN_VARS mainVars) {
 /// Params:
 ///   mainVars = MAIN_VARS
 void rotateBlockLeft(ref MAIN_VARS mainVars) {
-    int[4][4] rotatedBlock;
-    foreach (y; 0 .. 4)
-        foreach (x; 0 .. 4)
-            rotatedBlock[3 - x][y] = mainVars.currentBlock[y][x];
+    ulong blockSize = mainVars.currentBlock.length;
+
+    // 新しい2次元配列を作成
+    int[][] rotatedBlock = new int[][](blockSize); // 外側の配列だけ確保
+    foreach (i; 0 .. blockSize) {
+        rotatedBlock[i] = new int[](blockSize); // 各行を確保
+    }
+
+    // 左回転の変換
+    foreach (y; 0 .. blockSize)
+        foreach (x; 0 .. blockSize)
+            rotatedBlock[blockSize - 1 - x][y] = mainVars.currentBlock[y][x];
 
     if (!checkCollision(mainVars)) {
         mainVars.currentBlock = rotatedBlock;
@@ -281,11 +288,19 @@ void rotateBlockLeft(ref MAIN_VARS mainVars) {
 /// Params:
 ///   mainVars = MAIN_VARS
 void rotateBlockRight(ref MAIN_VARS mainVars) {
-    int[4][4] rotatedBlock;
-    foreach (y; 0 .. 4)
-        foreach (x; 0 .. 4)
-            rotatedBlock[x][3 - y] = mainVars.currentBlock[y][x];
+    ulong blockSize = mainVars.currentBlock.length;
 
+    // 新しい2次元配列を作成
+    int[][] rotatedBlock = new int[][](blockSize); // 外側の配列だけ確保
+    foreach (i; 0 .. blockSize) {
+        rotatedBlock[i] = new int[](blockSize); // 各行を確保
+    }
+
+    // 右回転の変換
+    foreach (y; 0 .. blockSize)
+        foreach (x; 0 .. blockSize)
+            rotatedBlock[x][blockSize - 1 - y] = mainVars.currentBlock[y][x];
+    
     if (!checkCollision(mainVars)) {
         mainVars.currentBlock = rotatedBlock;
     } else {
@@ -297,7 +312,7 @@ void rotateBlockRight(ref MAIN_VARS mainVars) {
 /// Params:
 ///   mainVars = MAIN_VARS
 ///   rotatedBlock = int[4][4]
-void tryWallKick(ref MAIN_VARS mainVars, int[4][4] rotatedBlock) {
+void tryWallKick(ref MAIN_VARS mainVars, int[][] rotatedBlock) {
     // 試しに左に1マスずらしてチェック
     mainVars.blockX -= 1;
     if (!checkCollision(mainVars)) {
@@ -433,7 +448,6 @@ void main() {
     mainVars.score = 0,
     mainVars.use_way = "A/D : move\n\nSPACE : rotate\n\nS : soft drop\n\nENTER : hard drop",
     mainVars.board = new int[BOARD_WIDTH][BOARD_HEIGHT],
-    mainVars.currentBlock = new int[4][4],
     mainVars.blockX = 3,
     mainVars.blockY = 0,
     mainVars.currentBlockIndex = 0,
@@ -488,7 +502,7 @@ void main() {
                     mainVars.gameState = 0; // 待機中に戻る
                     mainVars.statusMessage = "Press Enter to Start";
                     mainVars.board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // 盤面の初期化
-                    mainVars.currentBlock = new int[4][4];
+                    mainVars.currentBlock = null;
                     mainVars.score = 0;
                 }
                 break;
