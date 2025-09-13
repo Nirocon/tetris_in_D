@@ -107,14 +107,6 @@ int uniqueRandom(int n) {
         used[] = false;
     }
 
-    printf("count: %d\n", count);
-    if (used[0]){
-        printf("used: true\n");
-    } else {
-        printf("used: false\n");
-    }
-
-
     int index;
     do {
         index = uniform(0, n);
