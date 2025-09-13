@@ -517,7 +517,7 @@ void main() {
     string statusMessage = "Press Enter to Start";
     int statusMessageSize = 40;
     int score = 0;
-    string use_way = "left/right/down : move\n\nA/S : rotate\n\nspace key : hard drop";
+    string use_way = "A/D : move\n\nSPACE : rotate\n\nS : soft drop\n\nENTER : hard drop";
 
     int[BOARD_WIDTH][BOARD_HEIGHT] board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // Note the order of dimensions: [height][width]
     int[4][4] currentBlock;
@@ -543,17 +543,25 @@ void main() {
                 break;
             case 1: // プレイ中
                 // 入力処理
-                if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT))  	blockX--;
-                if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT)) 	blockX++;
-                if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN))
+                // 左右移動 (←キー or →キー or Aキー or Dキー)
+                if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT) || IsKeyPressed(KeyboardKey.KEY_A) || IsKeyPressedRepeat(KeyboardKey.KEY_A))  	
+                    blockX--;
+                if (IsKeyPressed(KeyboardKey.KEY_RIGHT) || IsKeyPressedRepeat(KeyboardKey.KEY_RIGHT) || IsKeyPressed(KeyboardKey.KEY_D) || IsKeyPressedRepeat(KeyboardKey.KEY_D))
+                    blockX++;
+                // ソフトドロップ (↓キー or Sキー)
+                if (IsKeyPressed(KeyboardKey.KEY_DOWN) || IsKeyPressedRepeat(KeyboardKey.KEY_DOWN) || IsKeyPressed(KeyboardKey.KEY_S) || IsKeyPressedRepeat(KeyboardKey.KEY_S))
                     drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score, dropInterval); // 1マス下に移動
-                if (IsKeyPressed(KeyboardKey.KEY_A)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
-                if (IsKeyPressed(KeyboardKey.KEY_S)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
+                // 回転 (Qキー or Spaceキーで左回転, Eキーで右回転)
+                if (IsKeyPressed(KeyboardKey.KEY_Q) || IsKeyPressed(KeyboardKey.KEY_SPACE))
+                    rotateBlockLeft(board, currentBlock, blockX, blockY);
+                if (IsKeyPressed(KeyboardKey.KEY_E))
+                    rotateBlockRight(board, currentBlock, blockX, blockY);
 
                 adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
-                if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	
-                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage, score, dropInterval);  // ハードドロップ
+                // ハードドロップ (Shiftキー or Enterキー or Wキー)
+                if (IsKeyPressed(KeyboardKey.KEY_LEFT_SHIFT) || IsKeyPressed(KeyboardKey.KEY_RIGHT_SHIFT) || IsKeyPressed(KeyboardKey.KEY_ENTER) || IsKeyPressedRepeat(KeyboardKey.KEY_W))	
+                    hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage, score, dropInterval);
 
                 // 自動で下に落ちる処理
                 if (MonoTime.currTime - lastDrop > dropInterval) {
