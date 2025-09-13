@@ -76,6 +76,7 @@ struct MAIN_VARS {
     int[][] currentBlock;
     int blockX = 3, blockY;
     int currentBlockIndex;
+    bool fixFlag;
 
     MonoTime lastDrop;
     Duration dropInterval;
@@ -168,6 +169,7 @@ void fixBlock(ref MAIN_VARS mainVars) {
         }
     }
     mainVars.score += 100;  // ブロックを固定したらスコアを加算
+    mainVars.lastDrop = MonoTime.currTime; // 落下タイマーのリセット
     clearFullLines(mainVars);  // ラインをクリア
 }
 
@@ -337,8 +339,10 @@ void hardDrop(ref MAIN_VARS mainVars) {
         mainVars.blockY++;
     }
     mainVars.blockY--;           // 衝突したから1マス戻す
-    fixBlock(mainVars);         // 盤面に固定
-    spawnBlock(mainVars);       // 次のブロック
+    if (!mainVars.fixFlag){
+        mainVars.fixFlag = true;    // fixBlockを呼ぶフラグを立てる
+        mainVars.lastDrop = MonoTime.currTime; // 落下タイマーのリセット
+    }
 }
 
 /// 
@@ -431,9 +435,11 @@ void drawField(ref MAIN_VARS mainVars) {
 void drop(ref MAIN_VARS mainVars) {
     mainVars.blockY++;
     if (checkCollision(mainVars)) {
-        mainVars.blockY--; // 衝突したら1マス戻す
-        fixBlock(mainVars); // 盤面に固定
-        spawnBlock(mainVars); // 次のブロックの生成
+        mainVars.blockY--;          // 衝突したら1マス戻す
+        if (!mainVars.fixFlag){
+            mainVars.fixFlag = true;    // fixBlockを呼ぶフラグを立てる
+            mainVars.lastDrop = MonoTime.currTime; // 落下タイマーのリセット
+        }
     }
 }
 
@@ -493,6 +499,8 @@ void main() {
     mainVars.blockX = 3,
     mainVars.blockY = 0,
     mainVars.currentBlockIndex = 0,
+    mainVars.currentBlock = null,
+    mainVars.fixFlag = false,
     mainVars.lastDrop = MonoTime.currTime,
     mainVars.dropInterval = 700.msecs,
 
@@ -513,6 +521,12 @@ void main() {
                 }
                 break;
             case 1: // プレイ中
+                if (mainVars.fixFlag && MonoTime.currTime - mainVars.lastDrop > 300.msecs) {
+                    fixBlock(mainVars);       // 盤面に固定
+                    spawnBlock(mainVars);     // 次のブロックの生成
+                    mainVars.fixFlag = false; // フラグをリセット
+                }
+
                 // 入力処理
                 // 左右移動 (←キー or →キー or Aキー or Dキー)
                 if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT) || IsKeyPressed(KeyboardKey.KEY_A) || IsKeyPressedRepeat(KeyboardKey.KEY_A))  	
@@ -539,6 +553,7 @@ void main() {
                     drop(mainVars);
                     mainVars.lastDrop = MonoTime.currTime;
                 }
+
                 break;
             case 2: // ゲームオーバー
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER)) {
