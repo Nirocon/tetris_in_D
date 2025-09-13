@@ -237,7 +237,7 @@ void drawBlock(
                     SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + drawY * TILE_SIZE,
                     TILE_SIZE - 1,
                     TILE_SIZE - 1,
-                    Colors.MAROON
+                    Color(150, 0, 0)
                 );
             }
         }
@@ -465,6 +465,7 @@ void main() {
     string statusMessage = "Press Enter to Start";
     int statusMessageSize = 40;
     int score = 0;
+    string use_way = "left/right/down : move\n\nA/S : rotate\n\nspace key : hard drop";
 
     int[BOARD_WIDTH][BOARD_HEIGHT] board = new int[BOARD_WIDTH][BOARD_HEIGHT]; // Note the order of dimensions: [height][width]
     int[4][4] currentBlock;
@@ -496,10 +497,11 @@ void main() {
                     drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score); // 1マス下に移動
                 if (IsKeyPressed(KeyboardKey.KEY_A)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
                 if (IsKeyPressed(KeyboardKey.KEY_S)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
+                
+                adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
+
                 if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	
                     hardDrop(board, currentBlock, currentBlockIndex, blockX, blockY, gameState, statusMessage, score);  // ハードドロップ
-
-                adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
                 // 自動で下に落ちる処理
                 if (MonoTime.currTime - lastDrop > dropInterval) {
@@ -524,7 +526,7 @@ void main() {
 
         // 描画
         BeginDrawing();
-        ClearBackground(Colors.RAYWHITE);
+        ClearBackground(Colors.BLACK);
 
         drawField(board);                           // 盤面の描画
         drawBlock(currentBlock, blockX, blockY);    // ブロックの描画
@@ -536,14 +538,14 @@ void main() {
                 SCREEN_HEIGHT / 2 - statusMessageSize / 2 - 10,
                 MeasureText(statusMessage.ptr, statusMessageSize) + 40,
                 statusMessageSize + 20,
-                Color(255, 255, 255, 200)
+                Color(0, 0, 0, 200)
             );
             DrawText(
                 statusMessage.ptr,
                 SCREEN_WIDTH / 2 - MeasureText(statusMessage.ptr, statusMessageSize) / 2,
                 SCREEN_HEIGHT / 2 - statusMessageSize / 2,
                 statusMessageSize,
-                Colors.DARKGRAY
+                Colors.LIGHTGRAY
             );
         }
 
@@ -553,7 +555,15 @@ void main() {
             SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 - 150,
             SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + 20,
             20,
-            Colors.DARKGRAY
+            Colors.LIGHTGRAY
+        );
+        // 操作方法の描画
+        DrawText(
+            use_way.ptr,
+            SCREEN_WIDTH / 2 - BOARD_WIDTH * TILE_SIZE / 2 - 250,
+            SCREEN_HEIGHT / 2 - BOARD_HEIGHT * TILE_SIZE / 2 + 70,
+            20,
+            Colors.LIGHTGRAY
         );
 
         EndDrawing();
