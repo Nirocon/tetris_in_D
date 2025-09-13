@@ -81,7 +81,7 @@ void spawnBlock(
                 ref int gameState,
                 ref string statusMessage
             ) {
-    currentBlockIndex = uniform(0, 7);
+    currentBlockIndex = uniqueRandom(tetrominoShapes.length);
     currentBlock = tetrominoShapes[currentBlockIndex];
     blockX = 3;
     blockY = 0;
@@ -90,6 +90,35 @@ void spawnBlock(
         gameState = 2; // ゲームオーバー
         statusMessage = "Game Over! Press Enter to Restart";
     }
+}
+
+///
+/// 0~nの中からランダムに1つ選び返す。全て選ばれるまで同じものは選ばれない。
+/// Params:
+///   n = int
+/// Returns: int
+int uniqueRandom(int n) {
+    static bool[] used;
+    static int count = 0;
+
+    // 初回呼び出し時に配列を初期化
+    if (count == 0) {
+        used = new bool[n];
+    }
+
+    if (count == n) {
+        used[] = false;
+        count = 0;
+    }
+
+    int index;
+    do {
+        index = uniform(0, n);
+    } while (used[index]);
+
+    used[index] = true;
+    count++;
+    return index;
 }
 
 /// 
@@ -497,7 +526,7 @@ void main() {
                     drop(blockY, blockX, board, currentBlock, currentBlockIndex, gameState, statusMessage, score); // 1マス下に移動
                 if (IsKeyPressed(KeyboardKey.KEY_A)) 		rotateBlockLeft(board, currentBlock, blockX, blockY);  // 回転処理
                 if (IsKeyPressed(KeyboardKey.KEY_S)) 		rotateBlockRight(board, currentBlock, blockX, blockY);  // 回転処理
-                
+
                 adjustBlockPosition(board, currentBlock, blockX, blockY);  // テトミノの位置補正
 
                 if (IsKeyPressed(KeyboardKey.KEY_SPACE))  	
