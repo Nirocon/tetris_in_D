@@ -335,10 +335,9 @@ void tryWallKick(ref MAIN_VARS mainVars, int[][] rotatedBlock) {
 /// Params:
 ///   mainVars = MAIN_VARS
 void hardDrop(ref MAIN_VARS mainVars) {
-    while (!checkCollision(mainVars)) {
+    while (!isBlockOnGround(mainVars)){
         mainVars.blockY++;
     }
-    mainVars.blockY--;           // 衝突したから1マス戻す
     if (!mainVars.fixFlag){
         mainVars.fixFlag = true;    // fixBlockを呼ぶフラグを立てる
         mainVars.lastDrop = MonoTime.currTime; // 落下タイマーのリセット
@@ -433,14 +432,26 @@ void drawField(ref MAIN_VARS mainVars) {
 /// Params:
 ///   mainVars = MAIN_VARS
 void drop(ref MAIN_VARS mainVars) {
-    mainVars.blockY++;
-    if (checkCollision(mainVars)) {
-        mainVars.blockY--;          // 衝突したら1マス戻す
-        if (!mainVars.fixFlag){
-            mainVars.fixFlag = true;    // fixBlockを呼ぶフラグを立てる
-            mainVars.lastDrop = MonoTime.currTime; // 落下タイマーのリセット
-        }
+    if (!isBlockOnGround(mainVars)){
+        mainVars.blockY++;
+        return;
     }
+    if (!mainVars.fixFlag){
+        mainVars.fixFlag = true;    // fixBlockを呼ぶフラグを立てる
+        mainVars.lastDrop = MonoTime.currTime; // 落下タイマーのリセット
+    }
+}
+
+///
+/// ブロックが接地しているかどうかをチェックする。
+/// Params:
+///   mainVars = MAIN_VARS
+/// Returns: bool
+bool isBlockOnGround(ref MAIN_VARS mainVars) {
+    mainVars.blockY++;
+    bool onGround = checkCollision(mainVars);
+    mainVars.blockY--;
+    return onGround;
 }
 
 ///
@@ -521,12 +532,6 @@ void main() {
                 }
                 break;
             case 1: // プレイ中
-                if (mainVars.fixFlag && MonoTime.currTime - mainVars.lastDrop > 300.msecs) {
-                    fixBlock(mainVars);       // 盤面に固定
-                    spawnBlock(mainVars);     // 次のブロックの生成
-                    mainVars.fixFlag = false; // フラグをリセット
-                }
-
                 // 入力処理
                 // 左右移動 (←キー or →キー or Aキー or Dキー)
                 if (IsKeyPressed(KeyboardKey.KEY_LEFT) || IsKeyPressedRepeat(KeyboardKey.KEY_LEFT) || IsKeyPressed(KeyboardKey.KEY_A) || IsKeyPressedRepeat(KeyboardKey.KEY_A))  	
@@ -543,6 +548,17 @@ void main() {
                     rotateBlockRight(mainVars);
 
                 adjustBlockPosition(mainVars);  // テトミノの位置補正
+
+                // ブロックを固定する処理
+                if (mainVars.fixFlag && MonoTime.currTime - mainVars.lastDrop > 300.msecs) {
+                    if (!isBlockOnGround(mainVars)){
+                        mainVars.fixFlag = false; // 接地してなかったらフラグをリセットして終了
+                    } else {
+                        fixBlock(mainVars);       // 盤面に固定
+                        spawnBlock(mainVars);     // 次のブロックの生成
+                        mainVars.fixFlag = false; // フラグをリセット
+                    }
+                }
 
                 // ハードドロップ (Shiftキー or Enterキー or Wキー)
                 if (IsKeyPressed(KeyboardKey.KEY_LEFT_SHIFT) || IsKeyPressed(KeyboardKey.KEY_RIGHT_SHIFT) || IsKeyPressed(KeyboardKey.KEY_ENTER) || IsKeyPressedRepeat(KeyboardKey.KEY_W))	
